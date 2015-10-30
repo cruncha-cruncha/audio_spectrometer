@@ -1,62 +1,49 @@
 import java.util.Arrays;
+ToyBox tb = new ToyBox();
 
 class D3OmgLag {
   float treble = 0;
   float[] mid = new float[5];
   float bass = 0;
   float tAngle = 0;
+  
+  void noLag(float b, float[] m, float t, float tA) {
+    treble = t;
+    mid = m;
+    bass = b;
+    tAngle = tA;
+  }
 }
 
-class Tessellated {
+class Planet {
   float radius;
+  int faces;
+  int verts;
   D3OmgLag lag = new D3OmgLag();
   float[][] stars;
   
-  // 80 faces
-  // each item indexes three vertices, describing a face
-  int[][] fMap = { { 0, 1, 2}, { 3, 4, 1}, { 5, 2, 4}, { 1, 4, 2}, { 0, 6, 1}, { 7, 8, 6}, 
-                   { 3, 1, 8}, { 6, 8, 1}, { 7, 9, 8}, { 10, 11, 9}, { 3, 8, 11}, { 9, 11, 8}, 
-                   { 3, 11, 12}, { 10, 13, 11}, { 14, 12, 13}, { 11, 13, 12}, { 3, 12, 4}, { 14, 15, 12},
-                   { 5, 4, 15}, { 12, 15, 4}, { 14, 16, 15}, { 17, 18, 16}, { 5, 15, 18}, { 16, 18, 15}, 
-                   { 14, 19, 16}, { 20, 21, 19}, { 17, 16, 21}, { 19, 21, 16}, { 10, 22, 13}, { 20, 19, 22}, 
-                   { 14, 13, 19}, { 22, 19, 13}, { 10, 23, 22}, { 24, 25, 23}, { 20, 22, 25}, { 23, 25, 22}, 
-                   { 24, 26, 25}, { 27, 28, 26}, { 20, 25, 28}, { 26, 28, 25}, { 27, 29, 28}, { 17, 21, 29}, 
-                   { 20, 28, 21}, { 29, 21, 28}, { 27, 30, 29}, { 31, 32, 30}, { 17, 29, 32}, { 30, 32, 29},
-                   { 27, 33, 30}, { 34, 35, 33}, { 31, 30, 35}, { 33, 35, 30}, { 34, 36, 35}, { 0, 37, 36}, 
-                   { 31, 35, 37}, { 36, 37, 35}, { 0, 2, 37}, { 5, 38, 2}, { 31, 37, 38}, { 2, 38, 37}, 
-                   { 31, 38, 32}, { 5, 18, 38}, { 17, 32, 18}, { 38, 18, 32}, { 7, 6, 39}, { 0, 36, 6}, 
-                   { 34, 39, 36}, { 6, 36, 39}, { 7, 39, 40}, { 34, 41, 39}, { 24, 40, 41}, { 39, 41, 40},
-                   { 7, 40, 9}, { 24, 23, 40}, { 10, 9, 23}, { 40, 23, 9}, { 27, 26, 33}, { 24, 41, 26},
-                   { 34, 33, 41}, { 26, 41, 33} };
-               
-  // 42 vertices
-  float[][] vertices = { { -0.5257311, 0.0, 0.8506508}, { -0.30901697, 0.5, 0.809017}, { 0.0, 0.0, 1.0}, 
-                         { 0.0, 0.8506508, 0.5257311}, { 0.30901697, 0.5, 0.809017}, { 0.5257311, 0.0, 0.8506508},
-                         { -0.809017, 0.30901697, 0.5}, { -0.8506508, 0.5257311, 0.0}, { -0.5, 0.809017, 0.30901697},
-                         { -0.5, 0.809017, -0.30901697}, { 0.0, 0.8506508, -0.5257311}, { 0.0, 1.0, 0.0}, 
-                         { 0.5, 0.809017, 0.30901697}, { 0.5, 0.809017, -0.30901697}, { 0.8506508, 0.5257311, 0.0}, 
-                         { 0.809017, 0.30901697, 0.5}, { 1.0, 0.0, 0.0}, { 0.8506508, -0.5257311, 0.0}, 
-                         { 0.809017, -0.30901697, 0.5}, { 0.809017, 0.30901697, -0.5}, { 0.5257311, 0.0, -0.8506508},
-                         { 0.809017, -0.30901697, -0.5}, { 0.30901697, 0.5, -0.809017}, { -0.30901697, 0.5, -0.809017}, 
-                         { -0.5257311, 0.0, -0.8506508}, { 0.0, 0.0, -1.0}, { -0.30901697, -0.5, -0.809017}, 
-                         { 0.0, -0.8506508, -0.5257311}, { 0.30901697, -0.5, -0.809017}, { 0.5, -0.809017, -0.30901697}, 
-                         { 0.0, -1.0, 0.0}, { 0.0, -0.8506508, 0.5257311}, { 0.5, -0.809017, 0.30901697}, 
-                         { -0.5, -0.809017, -0.30901697}, { -0.8506508, -0.5257311, 0.0}, { -0.5, -0.809017, 0.30901697}, 
-                         { -0.809017, -0.30901697, 0.5}, { -0.30901697, -0.5, 0.809017}, { 0.30901697, -0.5, 0.809017}, 
-                         { -1.0, 0.0, 0.0}, { -0.809017, 0.30901697, -0.5}, { -0.809017, -0.30901697, -0.5} };
-                         
-  float[][] vMods = new float[42][3];
+  int[][] fMap;       // each element is three indices describing the three vertices of a triangle
+  float[][] vertices; // vertices are stored only once, but referenced multiple times through fMap                      
+  float[][] vMods;    // used to scale vertex values
   
-  Tessellated() {
+  Planet() {
+    load_shape("tardis");
     star_generator();
   }
   
+  private void load_shape(String shape) {
+    tb.select(shape);
+    faces = tb.get_f();
+    verts = tb.get_v();
+    fMap = tb.get_map();
+    vertices = tb.get_vertices();
+    vMods = new float[verts][3];
+    // possibility of race conditions?
+  }
+  
   private void morph() {
-    // squish it, elongate it, curve it, bend it, stretch it;
     float y = sin(frameCount*PI/53)/2.2f;
-    for (int i = 0; i < 42; i++) {
-      // can also use vertices array to locate where they normally are
-      // create an adjaceny matrix so can easily create "bumps"
+    for (int i = 0; i < verts; i++) {                                  
       vMods[i][1] += y;
     }
   }
@@ -73,15 +60,8 @@ class Tessellated {
     }
   }
   
-  private void noLag(float b, float[] m, float t, float tA) {
-    lag.treble = t;
-    lag.mid = m; // make sure this is by value, not reference!!
-    lag.bass = b;
-    lag.tAngle = tA;
-  }
-  
   private void fillMods() {
-    for(int i = 0; i < 42; i++) {
+    for(int i = 0; i < verts; i++) {                                     
       vMods[i][0] = 1.0f;
       vMods[i][1] = 1.0f;
       vMods[i][2] = 1.0f;
@@ -98,15 +78,15 @@ class Tessellated {
     }
     radius = 100 + 45*bass;
     
-    for(int i  = 0; i < 42; i++) {
+    for(int i  = 0; i < verts; i++) {                                       
       spike(i, mid[i%5]);
     }
     
     morph();
     
-    float tAngle = ico1.lag.tAngle;
+    float tAngle = lag.tAngle;
     if (treble > 0.5) {
-      if (ico1.lag.treble < 0.5) {
+      if (lag.treble < 0.5) {
         tAngle += 0.1;
       }
       tAngle += treble/10.0;
@@ -117,17 +97,16 @@ class Tessellated {
     rotateY(HALF_PI*tAngle);
     noStroke();
     fill(204,4,4);
-    for(int i = 0; i < 80; i++) { // i < 80
+    for(int i = 0; i < faces; i++) { // i < 80                                    
       beginShape();
       vertex( vertices[fMap[i][0]][0]*radius*vMods[fMap[i][0]][0], vertices[fMap[i][0]][1]*radius*vMods[fMap[i][0]][1], vertices[fMap[i][0]][2]*radius*vMods[fMap[i][0]][2]);
       vertex( vertices[fMap[i][1]][0]*radius*vMods[fMap[i][1]][0], vertices[fMap[i][1]][1]*radius*vMods[fMap[i][1]][1], vertices[fMap[i][1]][2]*radius*vMods[fMap[i][1]][2]);
       vertex( vertices[fMap[i][2]][0]*radius*vMods[fMap[i][2]][0], vertices[fMap[i][2]][1]*radius*vMods[fMap[i][2]][1], vertices[fMap[i][2]][2]*radius*vMods[fMap[i][2]][2]);
       endShape(CLOSE);
     }
-    //line(0,0,0,mVerts[0][0]*radius,mVerts[0][1]*radius, mVerts[0][2]*radius);
     popMatrix();
     
-    noLag( bass, mid, treble, tAngle);
+    lag.noLag( bass, mid, treble, tAngle);
   }
   
   void orbit(float[] smooth) {
@@ -145,36 +124,6 @@ class Tessellated {
       z2 = cos((i+1)*gap) * (smooth[i+1]*ampScl + radiusA);
       line( x1, 0, z1, x2, 0, z2);
       line( x1*1.05, 0, z1*1.05, x2*1.05, 0, z2*1.05);
-      // bezier! 
-      // dandruff!
-    }
-    popMatrix();
-  }
-  
-  void ripple( ArrayList<float[]> waves, float l ) {
-    float radiusA = 430;
-    float ampScl = 400;
-    float gap = TWO_PI/l;
-    float x1, z1, x2, z2, x3, z3;
-    pushMatrix();
-    noFill();
-    rotateY(-frameCount*PI/90);
-    for(int i = 0; i < waves.size(); i++) {
-      if(waves.get(i)[1] > 0) {
-        stroke(0,255,0,255-waves.get(i)[1]*200.0f);
-        x1 = sin(waves.get(i)[0]*gap) * (waves.get(i)[1]*ampScl + radiusA);
-        z1 = cos(waves.get(i)[0]*gap) * (waves.get(i)[1]*ampScl + radiusA);
-        x2 = sin(waves.get(i)[0]*gap+gap) * (waves.get(i)[1]*ampScl + radiusA);
-        z2 = cos(waves.get(i)[0]*gap+gap) * (waves.get(i)[1]*ampScl + radiusA);
-        x3 = sin(waves.get(i)[0]*gap+gap/2) * (waves.get(i)[1]*ampScl + radiusA + waves.get(i)[1]*10);
-        z3 = cos(waves.get(i)[0]*gap+gap/2) * (waves.get(i)[1]*ampScl + radiusA + waves.get(i)[1]*10);
-        line( x1, 0, z1, x2, 0, z2);
-        line( x1, 0, z1, x3, 0, z3);
-        line( x2, 0, z2, x3, 0, z3);
-        // somehow:
-        // launch from correct yrotation, but then go straight into space (cancel momentum)
-        // to not scale with amplitude, kepp a fixed width
-      }
     }
     popMatrix();
   }
@@ -238,5 +187,73 @@ class Tessellated {
     vertex( 0, -r, z);
     endShape(CLOSE);
     popMatrix();
+  }
+}
+
+class ToyBox {
+  // should also include scale and some sort of colour scheme
+  int selector = 0;
+  int[] faces = { 80, 14 };
+  int[] verts = { 42, 9 };
+  
+  int[][][] fMaps = { { { 0, 1, 2}, { 3, 4, 1}, { 5, 2, 4}, { 1, 4, 2}, { 0, 6, 1}, { 7, 8, 6}, 
+                        { 3, 1, 8}, { 6, 8, 1}, { 7, 9, 8}, { 10, 11, 9}, { 3, 8, 11}, { 9, 11, 8}, 
+                        { 3, 11, 12}, { 10, 13, 11}, { 14, 12, 13}, { 11, 13, 12}, { 3, 12, 4}, { 14, 15, 12},
+                        { 5, 4, 15}, { 12, 15, 4}, { 14, 16, 15}, { 17, 18, 16}, { 5, 15, 18}, { 16, 18, 15}, 
+                        { 14, 19, 16}, { 20, 21, 19}, { 17, 16, 21}, { 19, 21, 16}, { 10, 22, 13}, { 20, 19, 22}, 
+                        { 14, 13, 19}, { 22, 19, 13}, { 10, 23, 22}, { 24, 25, 23}, { 20, 22, 25}, { 23, 25, 22}, 
+                        { 24, 26, 25}, { 27, 28, 26}, { 20, 25, 28}, { 26, 28, 25}, { 27, 29, 28}, { 17, 21, 29}, 
+                        { 20, 28, 21}, { 29, 21, 28}, { 27, 30, 29}, { 31, 32, 30}, { 17, 29, 32}, { 30, 32, 29},
+                        { 27, 33, 30}, { 34, 35, 33}, { 31, 30, 35}, { 33, 35, 30}, { 34, 36, 35}, { 0, 37, 36}, 
+                        { 31, 35, 37}, { 36, 37, 35}, { 0, 2, 37}, { 5, 38, 2}, { 31, 37, 38}, { 2, 38, 37}, 
+                        { 31, 38, 32}, { 5, 18, 38}, { 17, 32, 18}, { 38, 18, 32}, { 7, 6, 39}, { 0, 36, 6}, 
+                        { 34, 39, 36}, { 6, 36, 39}, { 7, 39, 40}, { 34, 41, 39}, { 24, 40, 41}, { 39, 41, 40},
+                        { 7, 40, 9}, { 24, 23, 40}, { 10, 9, 23}, { 40, 23, 9}, { 27, 26, 33}, { 24, 41, 26},
+                        { 34, 33, 41}, { 26, 41, 33} },
+                      { { 0, 1, 2}, { 0, 2, 3}, { 0, 1, 5}, { 0, 4, 5}, { 1, 2, 6}, { 1, 5, 6}, { 2, 3, 7},
+                        { 2, 6, 7}, { 0, 3, 4}, { 3, 4, 7}, { 4, 5, 8}, { 5, 6, 8}, { 6, 7, 8}, { 4, 7, 8} } };
+               
+  // 42 vertices
+  float[][][] vertices = { { { -0.5257311, 0.0, 0.8506508}, { -0.30901697, 0.5, 0.809017}, { 0.0, 0.0, 1.0}, 
+                             { 0.0, 0.8506508, 0.5257311}, { 0.30901697, 0.5, 0.809017}, { 0.5257311, 0.0, 0.8506508},
+                             { -0.809017, 0.30901697, 0.5}, { -0.8506508, 0.5257311, 0.0}, { -0.5, 0.809017, 0.30901697},
+                             { -0.5, 0.809017, -0.30901697}, { 0.0, 0.8506508, -0.5257311}, { 0.0, 1.0, 0.0}, 
+                             { 0.5, 0.809017, 0.30901697}, { 0.5, 0.809017, -0.30901697}, { 0.8506508, 0.5257311, 0.0}, 
+                             { 0.809017, 0.30901697, 0.5}, { 1.0, 0.0, 0.0}, { 0.8506508, -0.5257311, 0.0}, 
+                             { 0.809017, -0.30901697, 0.5}, { 0.809017, 0.30901697, -0.5}, { 0.5257311, 0.0, -0.8506508},
+                             { 0.809017, -0.30901697, -0.5}, { 0.30901697, 0.5, -0.809017}, { -0.30901697, 0.5, -0.809017}, 
+                             { -0.5257311, 0.0, -0.8506508}, { 0.0, 0.0, -1.0}, { -0.30901697, -0.5, -0.809017}, 
+                             { 0.0, -0.8506508, -0.5257311}, { 0.30901697, -0.5, -0.809017}, { 0.5, -0.809017, -0.30901697}, 
+                             { 0.0, -1.0, 0.0}, { 0.0, -0.8506508, 0.5257311}, { 0.5, -0.809017, 0.30901697}, 
+                             { -0.5, -0.809017, -0.30901697}, { -0.8506508, -0.5257311, 0.0}, { -0.5, -0.809017, 0.30901697}, 
+                             { -0.809017, -0.30901697, 0.5}, { -0.30901697, -0.5, 0.809017}, { 0.30901697, -0.5, 0.809017}, 
+                             { -1.0, 0.0, 0.0}, { -0.809017, 0.30901697, -0.5}, { -0.809017, -0.30901697, -0.5} },
+                           { { 1.0, 1.5, -1.0}, { -1.0, 1.5, -1.0}, { -1.0, 1.5, 1.0}, { 1.0, 1.5, 1.0}, { 1.0, -1.5, -1.0}, 
+                             { -1.0, -1.5, -1.0}, { -1.0, -1.5, 1.0}, { 1.0, -1.5, 1.0}, { 0, -2.0, 0} } };
+                             
+  void select(String choice) {
+    if (choice == "icosahedron2") {
+      selector = 0;
+    } else if (choice == "tardis") {
+      selector = 1;
+    } else {
+      selector = 0;
+    }
+  }
+  
+  int get_f() {
+    return faces[selector];
+  }
+  
+  int get_v() {
+    return verts[selector];
+  }
+  
+  int[][] get_map() {
+    return fMaps[selector];
+  }
+  
+  float[][] get_vertices() {
+    return vertices[selector];
   }
 }

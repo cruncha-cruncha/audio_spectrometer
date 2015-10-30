@@ -1,22 +1,15 @@
-class Vis_fx {
+class Waveform {
   boolean butterfly;
-  boolean rough_cut;
-  boolean low_pass;
-  boolean butterfly_nest;
-  boolean mountain_range;
   boolean dandruff;
+  
   private float[] wingHistory = new float[0];
   private int butterfly_lag;
   private float[] butterfly_storage = new float[0];
   private ArrayList<float[]> head_of_hair; // could alternatively use two FloatLists
   private float[] flake_lag = new float[0];
   
-  Vis_fx() {
+  Waveform() {
     butterfly = false;
-    rough_cut = false;
-    low_pass = false;
-    butterfly_nest = false;
-    mountain_range = false;
     dandruff = false;
     butterfly_lag = -1;
     head_of_hair = new ArrayList<float[]>(width);
@@ -76,26 +69,6 @@ class Vis_fx {
       }
     }
     return composite.array();
-  }
-  
-  // do something where if amplitude > threshold, a piece goes flying off either up or down
-  // maybe incorporate into the butterfly draw?
-  
-  float[] butterfly_nest(int cycle) {
-    butterfly(cycle);
-    int scaler = 1;
-    if (scaler == 1) {
-      return wingHistory;
-    } else {
-      int len = wingHistory.length/scaler;
-      float[] condensed = new float[len];
-      for(int i = 0; i < len; i++ ) {
-        for(int j = 0; j < scaler; j++ ) {
-          condensed[i] += wingHistory[i*scaler+j] / scaler;
-        }
-      }
-      return condensed;
-    }
   }
   
   float[] butterfly(int cycle) {
@@ -171,7 +144,6 @@ class Vis_fx {
       head_of_hair.remove(removal.get(i));
     }
     
-    int testing = 0;
     for(int i  = 0; i < flakes.length; i++ ) {
       float[] tmp = new float[2];
       if (0.3 > random(1)) {   // sparser, and more variation is cooler looking
@@ -190,5 +162,113 @@ class Vis_fx {
     }
 
     return head_of_hair;
+  }
+}
+
+class Spectro { 
+  private float treble_max = 0;
+  private float treble_decayed_max = 0;
+  private float treble_lag = 0;
+  private float bass_max = 0;
+  private float bass_decayed_max = 0;
+  private float mid_max = 0;
+  private float mid_decayed_max = 0;
+  private int mid_cycles = 0;
+  private int treble_cycles = 0;
+  private int bass_cycles = 0;
+  
+  float[] midLevel() {
+    float[] results = new float[5];
+    float[] lvls = new float[5];
+    lvls[0] = fft.calcAvg(120.0, 300.0);
+    lvls[1] = fft.calcAvg(200.0, 450.0);
+    lvls[2] = fft.calcAvg(450.0, 800.0);
+    lvls[3] = fft.calcAvg(500.0, 1400.0);
+    lvls[4] = fft.calcAvg(1000.0, 1500.0);
+    
+    float sum = lvls[0];
+    float max = lvls[0];
+    for(int i = 1; i < 5; i++) {
+      if (lvls[i] > max) {
+        max = lvls[i];
+      }
+      sum += lvls[i];
+    }
+    
+    if (max > mid_decayed_max) {
+      mid_decayed_max = max;
+      mid_max = max;
+      mid_cycles = 0;
+      for(int i = 0; i < 5; i++) {
+        results[i] = lvls[i]/max;
+      }
+      return results;
+    } else {
+      mid_cycles += 1;
+      for(int i = 0; i < 5; i++) {
+        results[i] = lvls[i]/mid_decayed_max;
+      }
+      mid_decayed_max = mid_max * (1 - mid_cycles/(fps*2));
+      return results;
+    }
+  }
+  
+  float bassLevel() {
+    float lvl = fft.calcAvg(20.0,120.0);
+    // average is already decently smooth
+    if (lvl > bass_decayed_max) {
+      bass_decayed_max = lvl;
+      bass_max = lvl;
+      bass_cycles = 0;
+      return 0;
+    } else {
+      return this.bassDecay(lvl);
+    }
+  }
+  
+  private float bassDecay(float max) {
+    bass_cycles += 1;
+    float arg = -bass_cycles/fps + 5;
+    bass_decayed_max = bass_max * (atan(arg) + HALF_PI) / 2.9442;
+    return max/bass_decayed_max;
+  }
+  
+  float trebleLevel() {
+    int lowerLim = fft.specSize() - fft.specSize()/2;
+    float sum = 0;
+    for(int i = lowerLim; i < fft.specSize(); i++) {
+      sum += fft.getBand(i);
+    }
+    float current = this.trebleRaw(sum);
+    
+    // smooth
+    if ( treble_lag < 0.5 && current > 0.5 ) {
+      treble_lag = current;
+      return current;
+    } else if (abs(current-treble_lag) < 1.0f/3.0f) {
+      treble_lag = current*0.2+treble_lag*0.8;
+      return treble_lag;
+    } else {  // this case roughly corresponds to a snare hit
+      treble_lag = current;
+      return current;
+    }
+  }
+    
+  private float trebleRaw( float lvl ) {
+    if (lvl > treble_decayed_max) {
+      treble_max = lvl;
+      treble_decayed_max = lvl;
+      treble_cycles = 0;
+      return 1;
+    } else {
+      return this.trebleDecay(lvl);
+    }
+  }
+  
+  private float trebleDecay(float max) {
+    treble_cycles += 1;
+    float exp = treble_cycles/(fps*3); // six seconds until compare_max = 1/2 decay_max
+    treble_decayed_max = treble_max * cos(HALF_PI - pow(2.7, -exp) * HALF_PI);
+    return max/treble_decayed_max;
   }
 }
