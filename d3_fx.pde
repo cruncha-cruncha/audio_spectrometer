@@ -27,7 +27,7 @@ class Planet {
   float[][] vMods;    // used to scale vertex values
   
   Planet() {
-    load_shape("tardis");
+    load_shape("icosahedron2");
     star_generator();
   }
   

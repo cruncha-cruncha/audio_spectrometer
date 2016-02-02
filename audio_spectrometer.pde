@@ -17,8 +17,8 @@ Camera camera;
 //global gain? on a quieter song, the waveforms are not too exciting
 
 void setup() {
-  //fullScreen(P3D, 1);
-  size( 1400, 700, P3D);
+  fullScreen(P3D, 1);
+  //size( 1400, 700, P3D);
   frameRate(fps);
   
   wfcontrol = new Waveform();
