@@ -11,7 +11,7 @@ Create a full-screen animation, suitable for a projector, which responds and ada
 
 ###Code
 
-Currently using Processing 3.0 and uses the Minim audio library.
+Developed in Processing 3.0, using the Minim audio library.
 
 ###Current Output
 
